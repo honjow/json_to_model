@@ -109,7 +109,8 @@ class DartDeclaration {
       } else if (type == 'int') {
         conversion = "int.tryParse('\${$jsonVar}') ?? 0";
       } else if (type == 'bool') {
-        conversion = 'bool.tryParse(\${$jsonVar}) ?? false';
+        conversion =
+            "bool.tryParse('\${$jsonVar}', caseSensitive: false) ?? false";
       } else {
         conversion = '$jsonVar as $type';
       }
