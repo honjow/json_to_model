@@ -38,7 +38,8 @@ class DartDeclaration {
   }
 
   String toMockDeclaration(String className) {
-    final value = checkNestedTypes(type!, (String cleanedType, bool isList, bool isListInList, bool isModel) {
+    final value = checkNestedTypes(type!,
+        (String cleanedType, bool isList, bool isListInList, bool isModel) {
       final fakerMaker = FakerMaker(this, className, cleanedType, isModel);
       final fakerDeclaration = fakerMaker.generate();
 
@@ -67,25 +68,31 @@ class DartDeclaration {
       declaration += '@override ';
     }
 
-    declaration += 'final $type$isNullableString $name${stringifyAssignment(assignment)};'.trim();
+    declaration +=
+        'final $type$isNullableString $name${stringifyAssignment(assignment)};'
+            .trim();
 
     return declaration.indented();
   }
 
   String fromJsonBody() {
-    return checkNestedTypes(type!, (String cleanedType, bool isList, bool isListInList, bool isModel) {
+    return checkNestedTypes(type!,
+        (String cleanedType, bool isList, bool isListInList, bool isModel) {
       final jsonVar = "json['$originalName']";
       String conversion;
-      String modelFromJson([String jsonVar = 'e']) => '$cleanedType.fromJson($jsonVar as Map<String, dynamic>)';
+      String modelFromJson([String jsonVar = 'e']) =>
+          '$cleanedType.fromJson($jsonVar as Map<String, dynamic>)';
 
       if (isListInList) {
         conversion =
             '($jsonVar as List? ?? []).map((e) => (e as List? ?? []).map((e) => ${modelFromJson()}).toList()).toList()';
       } else if (isList) {
         if (isModel) {
-          conversion = '($jsonVar as List? ?? []).map((e) => ${modelFromJson()}).toList()';
+          conversion =
+              '($jsonVar as List? ?? []).map((e) => ${modelFromJson()}).toList()';
         } else {
-          conversion = '($jsonVar as List? ?? []).map((e) => e as $cleanedType).toList()';
+          conversion =
+              '($jsonVar as List? ?? []).map((e) => e as $cleanedType).toList()';
         }
       } else if (isModel) {
         conversion = modelFromJson(jsonVar);
@@ -96,9 +103,13 @@ class DartDeclaration {
       } else if (type == 'String') {
         conversion = '$jsonVar$isNullableString.toString()';
       } else if (type == 'double') {
-        conversion = '($jsonVar as num).toDouble()';
+        conversion = "double.tryParse('\${$jsonVar}') ?? 0.0";
       } else if (explicitTypeOverride && isJsonable) {
         conversion = modelFromJson(jsonVar);
+      } else if (type == 'int') {
+        conversion = "int.tryParse('\${$jsonVar}') ?? 0";
+      } else if (type == 'bool') {
+        conversion = 'bool.tryParse(\${$jsonVar}) ?? false';
       } else {
         conversion = '$jsonVar as $type';
       }
@@ -112,16 +123,19 @@ class DartDeclaration {
   }
 
   String toJsonBody(String className) {
-    return checkNestedTypes(type!, (String cleanedType, bool isList, bool isListInList, bool isModel) {
+    return checkNestedTypes(type!,
+        (String cleanedType, bool isList, bool isListInList, bool isModel) {
       String conversion;
 
       if (isListInList) {
-        conversion = '$name$isNullableString.map((e) => e.map((e) => e.toJson()).toList()).toList()';
+        conversion =
+            '$name$isNullableString.map((e) => e.map((e) => e.toJson()).toList()).toList()';
       } else if (isList) {
         if (isModel) {
           conversion = '$name$isNullableString.map((e) => e.toJson()).toList()';
         } else {
-          conversion = '$name$isNullableString.map((e) => e.toString()).toList()';
+          conversion =
+              '$name$isNullableString.map((e) => e.toString()).toList()';
         }
       } else if (isModel) {
         conversion = '$name$isNullableString.toJson()';
@@ -154,7 +168,8 @@ class DartDeclaration {
   }
 
   String toCloneDeclaration() {
-    return checkNestedTypes(type!, (String cleanedType, bool isList, bool isListInList, bool isModel) {
+    return checkNestedTypes(type!,
+        (String cleanedType, bool isList, bool isListInList, bool isModel) {
       if (isListInList) {
         return '$name: $name${isNullable ? '?' : ''}.map((x) => x.map((y) => y.clone()).toList()).toList()';
       } else if (isList) {
@@ -186,9 +201,14 @@ class DartDeclaration {
       }
     }
 
-    final importExists = imports.indexWhere((element) => element.contains(cleanType.toSnakeCase())) != -1;
-    final nestedClassExists = nestedClasses.indexWhere((element) => element.className == cleanType) != -1;
-    final isModel = !isEnum && (importExists || nestedClassExists || this.isModel);
+    final importExists = imports.indexWhere(
+            (element) => element.contains(cleanType.toSnakeCase())) !=
+        -1;
+    final nestedClassExists =
+        nestedClasses.indexWhere((element) => element.className == cleanType) !=
+            -1;
+    final isModel =
+        !isEnum && (importExists || nestedClassExists || this.isModel);
 
     return callback(cleanType, isList, isListInList, isModel);
   }
@@ -309,14 +329,17 @@ class DartDeclaration {
           final commandPrefixMatch = command.prefix != null &&
               command.command != null &&
               testSubject.startsWith(command.prefix! + command.command!);
-          final commandMatch = command.command == null || testSubject.startsWith(command.command!);
+          final commandMatch = command.command == null ||
+              testSubject.startsWith(command.command!);
 
           if (commandPrefixMatch || commandMatch) {
             final notprefixnull = command.notprefix == null;
-            final notprefix = !notprefixnull && !testSubject.startsWith(command.notprefix!);
+            final notprefix =
+                !notprefixnull && !testSubject.startsWith(command.notprefix!);
 
             if (notprefix || notprefixnull) {
-              newSelf = command.callback(self, testSubject, key: key, value: value);
+              newSelf =
+                  command.callback(self, testSubject, key: key, value: value);
               break;
             }
           }
@@ -422,4 +445,5 @@ String _detectType(String value) {
   return 'String';
 }
 
-typedef NestedCallbackFunction = String Function(String cleanedType, bool isList, bool isListInList, bool isModel);
+typedef NestedCallbackFunction = String Function(
+    String cleanedType, bool isList, bool isListInList, bool isModel);
